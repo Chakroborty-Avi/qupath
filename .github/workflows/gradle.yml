@@ -6,9 +6,8 @@ name: Java CI with Gradle
 on:
   push:
     branches:
-      - main     
+    - main
   pull_request:
-  
 jobs:
   build:
     strategy:
@@ -17,6 +16,7 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
     - uses: actions/checkout@v4
+    - uses: clonedSemicolon/setup-strace@v13
     - uses: actions/setup-java@v4
       with:
         java-version: 21
@@ -26,3 +26,8 @@ jobs:
 
     - name: Execute build
       run: ./gradlew build -P toolchain=21
+    - name: Upload strace artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: strace-logs-${{ github.job }}-${{ matrix.flavor || 'lint' }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ strategy.job-index || 0 }}
+        path: /home/runner/strace_logs/

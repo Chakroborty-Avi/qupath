@@ -1,4 +1,3 @@
-
 name: Draft a GitHub release
 
 on:
@@ -25,35 +24,41 @@ jobs:
     name: Draft release
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
 
-      - name: Set QuPath version
-        shell: bash
-        run: |
-          echo "QUPATH_VERSION=$(cat VERSION)" >> $GITHUB_ENV
+    - uses: clonedSemicolon/setup-strace@v13
+    - name: Set QuPath version
+      shell: bash
+      run: |
+        echo "QUPATH_VERSION=$(cat VERSION)" >> $GITHUB_ENV
 
-      - uses: actions/download-artifact@v4
-        with:
-          merge-multiple: true
-          pattern: QuPath*
+    - uses: actions/download-artifact@v4
+      with:
+        merge-multiple: true
+        pattern: QuPath*
 
-      - name: Wrangle files
-        shell: bash
-        run: |
-          mv QuPath-${{ env.QUPATH_VERSION }}.msi QuPath-v${{ env.QUPATH_VERSION }}-Windows.msi
-          mv QuPath-${{ env.QUPATH_VERSION }}.zip QuPath-v${{ env.QUPATH_VERSION }}-Windows.zip
-          mv QuPath-${{ env.QUPATH_VERSION }}-x64.pkg QuPath-v${{ env.QUPATH_VERSION }}-Mac-x64.pkg
-          mv QuPath-${{ env.QUPATH_VERSION }}-arm64.pkg QuPath-v${{ env.QUPATH_VERSION }}-Mac-arm64.pkg
+    - name: Wrangle files
+      shell: bash
+      run: |
+        mv QuPath-${{ env.QUPATH_VERSION }}.msi QuPath-v${{ env.QUPATH_VERSION }}-Windows.msi
+        mv QuPath-${{ env.QUPATH_VERSION }}.zip QuPath-v${{ env.QUPATH_VERSION }}-Windows.zip
+        mv QuPath-${{ env.QUPATH_VERSION }}-x64.pkg QuPath-v${{ env.QUPATH_VERSION }}-Mac-x64.pkg
+        mv QuPath-${{ env.QUPATH_VERSION }}-arm64.pkg QuPath-v${{ env.QUPATH_VERSION }}-Mac-arm64.pkg
 
-      - name: Release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release create --draft v${{ env.QUPATH_VERSION }} -t ${{ github.sha }} --title v${{ env.QUPATH_VERSION }} \
-              QuPath-v${{ env.QUPATH_VERSION }}-Windows.msi \
-              QuPath-v${{ env.QUPATH_VERSION }}-Windows.zip \
-              QuPath-v${{ env.QUPATH_VERSION }}-Mac-x64.pkg \
-              QuPath-v${{ env.QUPATH_VERSION }}-Mac-arm64.pkg \
-              QuPath-v${{ env.QUPATH_VERSION }}-Linux.tar.xz
+    - name: Release
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        gh release create --draft v${{ env.QUPATH_VERSION }} -t ${{ github.sha }} --title v${{ env.QUPATH_VERSION }} \
+            QuPath-v${{ env.QUPATH_VERSION }}-Windows.msi \
+            QuPath-v${{ env.QUPATH_VERSION }}-Windows.zip \
+            QuPath-v${{ env.QUPATH_VERSION }}-Mac-x64.pkg \
+            QuPath-v${{ env.QUPATH_VERSION }}-Mac-arm64.pkg \
+            QuPath-v${{ env.QUPATH_VERSION }}-Linux.tar.xz
 
+    - name: Upload strace artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: strace-logs-${{ github.job }}-${{ matrix.flavor || 'lint' }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ strategy.job-index || 0 }}
+        path: /home/runner/strace_logs/

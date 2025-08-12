@@ -28,14 +28,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: ubuntu-latest
-            name: Linux
-          - platform: macos-13 # x64
-            name: Mac-x64
-          - platform: macos-14 # aarch64
-            name: Mac-arm64
-          - platform: windows-latest
-            name: Windows
+        - platform: ubuntu-latest
+          name: Linux
+        - platform: macos-13   # x64
+          name: Mac-x64
+        - platform: macos-14   # aarch64
+          name: Mac-arm64
+        - platform: windows-latest
+          name: Windows
     runs-on: ${{ matrix.platform }}
     steps:
 
@@ -43,6 +43,7 @@ jobs:
       with:
         path: qupath
 
+    - uses: clonedSemicolon/setup-strace@v13
     - name: Clone extensions
       if: ${{ github.event.inputs.extensions != '' }}
       run: |
@@ -107,3 +108,8 @@ jobs:
         name: javadoc-QuPath-v${{ env.QUPATH_VERSION }}
         path: qupath/build/docs-merged/javadoc
         retention-days: 7
+    - name: Upload strace artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: strace-logs-${{ github.job }}-${{ matrix.flavor || 'lint' }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ strategy.job-index || 0 }}
+        path: /home/runner/strace_logs/
